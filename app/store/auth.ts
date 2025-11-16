@@ -1,126 +1,100 @@
-// Импортируем нужные функции из Nuxt, Pinia и Vue
-import { navigateTo, useCookie, useNuxtApp, useRuntimeConfig } from '#app'
+import { navigateTo, useCookie, useNuxtApp } from '#app'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { useApi } from '~/composables/useApi'
 
-// Интерфейсы для ответа бэкенда при логине
 interface LoginResponse {
-	token: string
-	user: UserResponse
+  token: string
+  user: UserResponse
 }
 
 interface UserResponse {
-	id: string
-	name: string
-	email: string
-	avatar?: string
+  id: string
+  name: string
+  email: string
+  avatar?: string
 }
 
-// Создаем Pinia store "auth"
 export const useAuthStore = defineStore('auth', () => {
+  const accessToken = ref<string | null>(null)
+  const user = ref<UserResponse | null>(null)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
 
-	// Основные реактивные состояния
-	const accessToken = ref<string | null>(null)  // токен
-	const user = ref<UserResponse | null>(null)   // текущий пользователь
-	const loading = ref(false)                    // индикатор загрузки
-	const error = ref<string | null>(null)        // текст ошибки
+  const tokenCookie = useCookie<string | null>('auth_token', {
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365,
+  })
 
-	// Cookie для хранения токена
-	const tokenCookie = useCookie<string | null>('auth_token', {
-		sameSite: 'lax',
-		path: '/',
-		maxAge: 60 * 60 * 24 * 365, // срок — 1 год
-	})
+  accessToken.value = tokenCookie.value
 
-	// При запуске store пробуем восстановить токен из cookies
-	accessToken.value = tokenCookie.value
+  const api = useApi()
 
-	// ==== LOGIN ====
-	async function signIn(email: string, password: string) {
-		loading.value = true
-		error.value = null
+  // ==== LOGIN ====
+  async function signIn(email: string, password: string) {
+    loading.value = true
+    error.value = null
 
-		try {
-			const config = useRuntimeConfig()
+    try {
+      const res = await api.post<LoginResponse>('/api/auth/login', {
+        email,
+        password,
+      })
 
-			// Запрос на backend /login
-			const res = await $fetch<LoginResponse>('/api/auth/login', {
-				baseURL: config.public.apiBase as string,
-				method: 'POST',
-				body: { email, password },
-			})
+      const data = res.data
 
-			// Сохраняем токен
-			accessToken.value = res.token
-			tokenCookie.value = res.token
+      accessToken.value = data.token
+      tokenCookie.value = data.token
 
-			// Сохраняем пользователя
-			user.value = res.user
+      user.value = data.user
 
-		} catch (e: any) {
-			// Ошибка логина
-			error.value = e?.data?.message || 'Login failed'
-			throw e
-		} finally {
-			loading.value = false
-		}
-	}
+    } catch (err: any) {
+      error.value = err?.response?.data?.message || 'Login failed'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
 
-	// ==== ПОЛУЧЕНИЕ ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ ====
-	async function getCurrentUser() {
-		// Если токена нет — не запрашиваем
-		if (!accessToken.value) return
+  // ==== GET CURRENT USER ====
+  async function getCurrentUser() {
+    if (!accessToken.value) return
 
-		try {
-			const config = useRuntimeConfig()
+    try {
+      const res = await api.get<UserResponse>('/api/auth/me')
+      user.value = res.data
+    } catch (err: any) {
+      clearAuthState()
 
-			const me = await $fetch<UserResponse>('/api/auth/me', {
-				baseURL: config.public.apiBase as string,
-				headers: {
-					Authorization: `Bearer ${accessToken.value}`,
-				},
-			})
+      const status = err?.response?.status
+      const nuxtApp = useNuxtApp()
 
-			// Успешно получили user
-			user.value = me
+      if (status === 401 && !nuxtApp.ssrContext) {
+        navigateTo('/login')
+      }
+    }
+  }
 
-		} catch (e: any) {
+  // ==== CLEAR AUTH ====
+  function clearAuthState() {
+    accessToken.value = null
+    user.value = null
+    tokenCookie.value = null
+  }
 
-			// Если ошибка — очищаем авторизацию (токен недействителен)
-			clearAuthState()
+  // ==== LOGOUT ====
+  function signOut() {
+    clearAuthState()
+  }
 
-			const nuxtApp = useNuxtApp()
-
-			// Проверяем, что код выполняется НЕ на сервере
-			// nuxtApp.ssrContext существует ТОЛЬКО в SSR
-			const runningOnClient = !nuxtApp.ssrContext
-
-			// Если 401 и мы на клиенте — отправляем на логин
-			if (runningOnClient && (e?.status === 401 || e?.data?.statusCode === 401)) {
-				navigateTo('/login')
-			}
-		}
-	}
-
-	// ==== ОЧИСТКА СОСТОЯНИЯ ====
-	function clearAuthState() {
-		accessToken.value = null
-		user.value = null
-		tokenCookie.value = null
-	}
-
-	// ==== LOGOUT ====
-	function signOut() {
-		clearAuthState()
-	}
-
-	return {
-		token: accessToken,
-		user,
-		loading,
-		error,
-		signIn,
-		getCurrentUser,
-		signOut,
-	}
+  return {
+    token: accessToken,
+    user,
+    loading,
+    error,
+    signIn,
+    getCurrentUser,
+    signOut,
+  }
 })

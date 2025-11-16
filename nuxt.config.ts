@@ -6,13 +6,13 @@ export default defineNuxtConfig({
     devtools: { enabled: true },
     ssr: true,
     modules: ["@nuxt/eslint", "@pinia/nuxt"],
-    css: ['./app/assets/css/main.css'],
+    css: ["./app/assets/css/main.css"],
     vite: {
-        plugins: [tailwindcss()],
+        plugins: [tailwindcss()]
     },
     runtimeConfig: {
         public: {
-            apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://dd-tz-frontend.vercel.app',
+            apiBase: process.env.NUXT_PUBLIC_API_BASE || "https://dd-tz-frontend.vercel.app"
         }
     }
 });

@@ -42,30 +42,34 @@ pnpm preview
 This project is built with modern web technologies and best practices for a Nuxt 4 SSR application.
 
 ### Framework & Language
+
 - **Nuxt 4** – Vue 3 framework for SSR, routing, and state management
 - **TypeScript** – typed JavaScript for safer and maintainable code
 
 ### State Management
+
 - **Pinia** – lightweight state management library for Vue/Nuxt
 
 ### Styling & UI
+
 - **Tailwind CSS** – utility-first CSS framework
 - **DaisyUI** – component library built on Tailwind CSS for fast UI development
 
 ### Linting & Formatting
+
 - **ESLint 9** – code linting
 - **Prettier** – code formatting
 
 ### API & HTTP
+
 - **Axios** – for REST API requests
 
 ### Deployment & SSR
+
 - **Vercel** – production deployment with SSR support
 - **Nitro** – Nuxt server engine for SSR
 
 ### Others
-
-
 
 ## References
 

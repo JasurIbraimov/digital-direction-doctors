@@ -57,7 +57,7 @@
 
                     <!-- Слоты выбранного дня -->
                     <div v-if="selectedSlots.length" class="flex flex-wrap gap-2">
-                        <button v-for="slot in selectedSlots" :key="slot.id" class="btn btn-xs btn-accent">
+                        <button v-for="slot in selectedSlots" :key="slot.id" class="btn btn-xs btn-accent" @click="onSlotClick">
                             {{ slot.startTime }} - {{ slot.endTime }}
                         </button>
                     </div>
@@ -96,22 +96,29 @@
                 <div class="flex justify-center gap-2 mt-4">
                     <button class="btn btn-sm" :disabled="reviewsPage === 1"
                         @click="reviewsPage--; fetchReviews()">Назад</button>
-                    <span>Страница {{ reviewsPage }} из {{ reviewsTotalPages }}</span>
+                    <span>Стр. {{ reviewsPage }} из {{ reviewsTotalPages }}</span>
                     <button class="btn btn-sm" :disabled="reviewsPage >= reviewsTotalPages"
                         @click="reviewsPage++; fetchReviews()">Вперед</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <AppPopup v-model:show="showModal">
+        <AppointmentForm :slotId="selectedSlot?.id" @success="onAppointmentSuccess" @cancel="showModal = false" />
+    </AppPopup>
+
 </template>
 
 
 <script setup lang="ts">
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useApi } from '~/composables/useApi';
+
+
 dayjs.locale('ru');
 
 const api = useApi();
@@ -141,10 +148,33 @@ const loadingReviews = ref(false);
 
 const reviewsTotalPages = computed(() => Math.ceil(reviewsTotal.value / reviewsLimit));
 
+const showModal = ref(false);
+const selectedSlot = ref<any>(null);
+
+
+watch(showModal, (val) => {
+  if (val) {
+    document.body.style.overflow = "hidden"; // запретить прокрутку
+  } else {
+    document.body.style.overflow = ""; // вернуть прокрутку
+  }
+});
+
+function onSlotClick(slot: any) {
+  selectedSlot.value = slot;
+  showModal.value = true;
+}
+
+function onAppointmentSuccess() {
+  showModal.value = false;
+  // Можно обновить слоты или расписание
+  fetchSchedule();
+}
+
+
 function onAvatarError(event: Event) {
     (event.target as HTMLImageElement).src = '/default-avatar.png';
 }
-
 
 function formatDate(dateStr: string) {
     const date = dayjs(dateStr);
@@ -184,21 +214,32 @@ function groupSlotsByDate(slots: any[]) {
     return grouped;
 }
 
-// Формируем календарь на неделю (сегодня + 6 дней)
+// Формируем календарь на неделю (сегодня + 6 дней), показываем только дни с доступными слотами
 function buildWeekDates() {
     const today = dayjs();
     const week: any[] = [];
     for (let i = 0; i < 7; i++) {
         const dateObj = today.add(i, 'day');
         const dateStr = dateObj.format('YYYY-MM-DD');
-        week.push({
-            date: dateStr,
-            dayName: dateObj.format('ddd'),
-            slots: schedule.value.find(d => d.date === dateStr)?.slots || []
-        });
+
+        const daySlots = schedule.value.find(d => d.date === dateStr)?.slots || [];
+        if (daySlots.length > 0) {
+            week.push({
+                date: dateStr,
+                dayName: dateObj.format('ddd'),
+                slots: daySlots
+            });
+        }
     }
     weekDates.value = week;
+
+    // Если выбранная дата теперь не входит в доступные, выбрать первую доступную
+    if (!weekDates.value.find(d => d.date === selectedDate.value) && weekDates.value.length) {
+        selectedDate.value = weekDates.value[0].date;
+        updateSelectedSlots();
+    }
 }
+
 
 // Загрузка расписания
 async function fetchSchedule() {
@@ -251,4 +292,9 @@ onMounted(async () => {
     await fetchSchedule();
     await fetchReviews();
 });
+
+onUnmounted(() => {
+  document.body.style.overflow = "";
+});
+
 </script>

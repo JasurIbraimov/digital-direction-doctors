@@ -63,7 +63,7 @@
     <!-- Пагинация -->
     <div class="flex justify-center gap-2 mt-6">
       <button class="btn btn-sm" :disabled="store.pagination.page === 1" @click="prevPage">Назад</button>
-      <span>Страница {{ store.pagination.page }} из {{ totalPages }}</span>
+      <span>Стр. {{ store.pagination.page }} из {{ totalPages }}</span>
       <button class="btn btn-sm" :disabled="store.pagination.page >= totalPages" @click="nextPage">Вперед</button>
     </div>
   </div>

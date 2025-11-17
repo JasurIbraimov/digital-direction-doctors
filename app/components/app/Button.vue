@@ -1,5 +1,5 @@
 <template>
-    <button class="btn btn-primary w-full flex items-center justify-center gap-2" :disabled="disabled || loading">
+    <button class="btn btn-primary flex items-center justify-center gap-2" :disabled="disabled || loading">
         <span v-if="loading" class="loading loading-spinner"></span>
         <span>
             <slot />

@@ -4,7 +4,7 @@
 
     <!-- Фильтры -->
     <div class="flex flex-col md:flex-row gap-4 mb-6">
-      <select v-model="store.filters.specialty" class="select select-bordered w-full md:w-1/3"
+      <select v-model="store.filters.specialty" class="select select-bordered outline-none  w-full md:w-1/3"
         @change="onSpecialtyChange">
         <option value="all">Все специальности</option>
         <option v-for="(name, id) in specialtiesMap" :key="id" :value="id">{{ name }}</option>
@@ -24,7 +24,7 @@
     <!-- Сортировка -->
     <div class="flex gap-4 mb-4 flex-col md:flex-row items-center">
       <label>Сортировать по:</label>
-      <select v-model="store.sort.field" class="select select-bordered" @change="onSortChange">
+      <select v-model="store.sort.field" class="select select-bordered outline-none " @change="onSortChange">
         <option value="rating">Рейтинг</option>
         <option value="experience">Стаж</option>
         <option value="price">Цена</option>

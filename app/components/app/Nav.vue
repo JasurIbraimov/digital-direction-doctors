@@ -1,5 +1,5 @@
 <template>
-    <nav class="navbar bg-base-100 shadow-sm fixed w-full top-0 left-0 px-4 flex justify-between gap-4">
+    <nav class="navbar bg-base-100 shadow-sm fixed w-full top-0 left-0 px-4 flex justify-between gap-4 z-50">
         <NuxtLink to="/" class="btn btn-ghost text-sm">Digital Direction</NuxtLink>
 
         <div class="flex items-center gap-2">
@@ -13,7 +13,8 @@
                 <div class="dropdown dropdown-end">
                     <button tabindex="0" class="btn btn-ghost btn-circle avatar">
                         <div class="w-10 rounded-full">
-                            <img :src="auth.user.avatar || '/default-avatar.png'" :alt="auth.user.name || 'User'" />
+                            <img :src="auth.user.avatar || '/default-avatar.png'" @error="onAvatarError($event)"
+                                :alt="auth.user.name || 'User'" />
                         </div>
                     </button>
                     <ul tabindex="-1"
@@ -41,6 +42,11 @@ import { onMounted } from "vue";
 import { useAuthStore } from "~/store/auth";
 
 const auth = useAuthStore();
+
+function onAvatarError(event: Event) {
+    const target = event.target as HTMLImageElement;
+    target.src = '/default-avatar.png';
+}
 
 onMounted(() => {
     auth.getCurrentUser();

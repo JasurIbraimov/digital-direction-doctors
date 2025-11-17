@@ -59,7 +59,7 @@ export const useAuthStore = defineStore("auth", () => {
     // ==== GET CURRENT USER ====
     async function getCurrentUser() {
         if (!accessToken.value) return;
-
+        loading.value = true;
         try {
             const res = await api.get<UserResponse>("/api/auth/me");
             user.value = res.data;
@@ -72,6 +72,8 @@ export const useAuthStore = defineStore("auth", () => {
             if (status === 401 && !nuxtApp.ssrContext) {
                 navigateTo("/login");
             }
+        } finally {
+            loading.value = false
         }
     }
 

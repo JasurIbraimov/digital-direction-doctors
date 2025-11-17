@@ -1,36 +1,22 @@
 <template>
-	<form @submit.prevent="handleLogin" class="bg-base-100 p-8 rounded-lg shadow-md w-96">
-		<h1 class="text-2xl mb-6 font-bold">Login</h1>
+	<form @submit.prevent="handleLogin" class="bg-base-100 p-8 rounded-lg shadow-md md:w-96 w-full">
 
-		<!-- Email -->
-		<div class="mb-4">
-			<label class="block mb-1 font-medium">Email</label>
-			<input v-model="email" type="email" class="input outline-none input-bordered w-full"
-				placeholder="you@example.com" />
-			<p v-if="errors.email" class="text-red-500 text-sm mt-1">{{ errors.email }}</p>
-		</div>
+		<h1 class="text-2xl mb-6 font-bold">Войти</h1>
 
-		<!-- Password -->
-		<div class="mb-4">
-			<label class="block mb-1 font-medium">Password</label>
-			<input v-model="password" type="password" class="input outline-none input-bordered w-full"
-				placeholder="Enter your password" />
-			<p v-if="errors.password" class="text-red-500 text-sm mt-1">
-				{{ errors.password }}
-			</p>
-		</div>
+		<AppInput v-model="email" label="Почта" type="email" placeholder="you@example.com" :error="errors.email" />
 
-		<!-- Submit button -->
-		<button type="submit" class="btn btn-primary w-full flex items-center justify-center gap-2" :disabled="loading">
-			<span v-if="loading" class="loading loading-spinner"></span>
-			<span>Login</span>
-		</button>
+		<AppInput v-model="password" label="Пароль" type="password" placeholder="Введите пароль"
+			:error="errors.password" />
 
+		<AppButton :loading="loading">
+			Войти
+		</AppButton>
 
-		<!-- General error message -->
 		<p v-if="error" class="text-red-500 text-sm mt-4">{{ error }}</p>
+
 	</form>
 </template>
+
 
 <script setup lang="ts">
 import { reactive, ref } from "vue";
